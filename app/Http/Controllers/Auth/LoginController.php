@@ -36,4 +36,12 @@ class LoginController extends Controller
     {
         $this->middleware('guest')->except('logout');
     }
+
+
+    public function redirectPath()
+    {
+        return 'http://localhost/tes/drinks/ts/';
+        //ログイン後の表示先
+    }
+
 }

@@ -1,0 +1,40 @@
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>新商品登録</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>商品登録</h1>
+    <form action="add_item.php" method="post" enctype="multipart/form-data">
+
+<body>
+    <p><label for="syouhinnmei">*商品名:</label></p>
+    <input type="text" id="syouhinnmei" name="syouhinnmei" required>
+    
+    <p> <label for="kakaku">*価格:</label></p>
+    <input type="number" id="kakaku" name="kakaku" required>
+    
+    <p><label for="zaikosuu">*在庫数:</label></p>
+    <input type="number" id="zaikosuu" name="zaikosuu" required>
+    
+    <p> <label for="gyousya">*メーカー名:</label></p>
+    <input type="text" id="gyousya" name="gyousya" required>
+    
+    <p><label for="komennto">コメント:</label></p>
+    <input type="text" id="komennto" name="komennto">
+    
+    <p><label for="image">商品画像:</label></p>
+    <input type="file" name="image">
+    
+    <p>*は入力必須項目</p>
+
+    <p></p><input type="submit" value="商品登録"></p>
+</form>
+<hr>
+<p><input type="button" onclick="location.href='index.php'" value="商品一覧"></p>
+
+</body>
+</body>
+</html>
+

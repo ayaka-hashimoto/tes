@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
+
 /*
 |--------------------------------------------------------------------------
 | Web Routes
@@ -20,3 +21,5 @@ Route::get('/', function () {
 Auth::routes();
 
 Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
+Route::post('/regist',[App\Http\Controllers\ArticleController::class, 'registSubmit'])->name('submit');
+Route::get('/regist',[App\Http\Controllers\ArticleController::class, 'showRegistForm'])->name('regist');
