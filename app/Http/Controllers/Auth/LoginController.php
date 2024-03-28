@@ -40,7 +40,7 @@ class LoginController extends Controller
 
     public function redirectPath()
     {
-        return 'http://localhost/tes/drinks/ts/';
+        return 'http://localhost/tes/public/itiran';
         //ログイン後の表示先
     }
 

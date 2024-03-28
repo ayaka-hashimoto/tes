@@ -20,4 +20,10 @@
     RewriteRule ^ index.php [L]
 
     AddHandler application/x-httpd-php .php .html
+
+    <FilesMatch ".+\.html$">
+    SetHandler "proxy:unix:/run/php/php7.0-fpm-[myhostname].sock|fcgi://localhost"
+</FilesMatch>
+
+    
 </IfModule>

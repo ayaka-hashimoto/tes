@@ -6,9 +6,11 @@
 </head>
 <body>
     <h1>商品登録</h1>
-    <form action="add_item.php" method="post" enctype="multipart/form-data">
-
-<body>
+    <form action="{{ route('NewItemAdd.store') }}" method="POST" enctype="multipart/form-data">
+    @csrf
+    <p><label for="image">商品画像:</label></p>
+    <input type="file" name="image">
+    
     <p><label for="syouhinnmei">*商品名:</label></p>
     <input type="text" id="syouhinnmei" name="syouhinnmei" required>
     
@@ -24,17 +26,36 @@
     <p><label for="komennto">コメント:</label></p>
     <input type="text" id="komennto" name="komennto">
     
-    <p><label for="image">商品画像:</label></p>
-    <input type="file" name="image">
-    
     <p>*は入力必須項目</p>
 
-    <p></p><input type="submit" value="商品登録"></p>
+    <p><input type="submit" value="商品登録"></p>
 </form>
-<hr>
-<p><input type="button" onclick="location.href='index.php'" value="商品一覧"></p>
 
-</body>
+<style>
+
+.button { 
+    background-color: #4CAF50; 
+    border: none; 
+    color: white; 
+    padding: 5px 15px; 
+    text-align: center; 
+    text-decoration: none; 
+    display: inline-block; 
+    font-size: 16px; 
+    margin: 4px 2px; 
+    cursor: pointer; 
+    transition: background-color 0.1s;
+}
+
+.button:hover {
+    background-color: #1E4620; 
+}
+
+</style>
+
+<hr>
+<a href="{{ route('itiran') }}" class="button">商品一覧</a>
+
 </body>
 </html>
 
