@@ -1,0 +1,37 @@
+th, td {
+    border: 1px solid #0b0b0b;
+    padding: 8px;
+}
+
+th {
+    background-color: #f3df05;
+    text-align:center;
+}
+
+td {
+    text-align: center;
+    vertical-align: middle;
+}
+
+.button { 
+    background-color: #4CAF50; /* ボタンの背景色を緑に設定 */
+    border: none; 
+    color: white; 
+    padding: 5px 15px; 
+    text-align: center; 
+    text-decoration: none; 
+    display: inline-block; 
+    font-size: 16px; 
+    margin: 4px 2px; 
+    cursor: pointer; 
+    transition: background-color 0.3s; 
+}
+
+.button:hover {
+    background-color: #1E4620; /* カーソルを置いたときの背景色を深い緑に設定 */
+}
+
+.container {
+    width: 80%;
+    margin: 0 auto; /* Center the container */
+}
