@@ -23,8 +23,13 @@
     <input type="number" id="stock" name="stock" value="{{ old('stock', $product->stock) }}" required>
     
     <p><label for="company_name">*メーカー名:</label></p>
-    <input type="text" id="company_name" name="company_name" value="{{ old('company_name', $product->company_name) }}" required>
-    
+    <select id="company_name" name="company_id">
+    <option value="">--選択してください--</option>
+    @foreach($companies as $company)
+        <option value="{{ $company->id }}">{{ $company->company_name }}</option>
+    @endforeach
+    </select>
+
     <p><label for="comment">コメント:</label></p>
     <input type="text" id="comment" name="comment" value="{{ old('comment', $product->comment) }}">
 

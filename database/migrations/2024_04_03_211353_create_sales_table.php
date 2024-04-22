@@ -17,8 +17,11 @@ return new class extends Migration
             $table->product_id();
             $table->created_at();
             $table->updated_at();
+
+            $table->foreign('product_id')->references('id')->on('products');
         });
      
+        
     }
 
     /**

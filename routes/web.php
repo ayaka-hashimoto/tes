@@ -1,7 +1,7 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\DrinksController;
+use App\Http\Controllers\ProductController;
 
 
 /*
@@ -26,11 +26,13 @@ Route::get('/home', [App\Http\Controllers\HomeController::class, 'index'])->name
 Route::post('/regist',[App\Http\Controllers\ArticleController::class, 'registSubmit'])->name('submit');
 
 //商品一覧
-Route::get('/itiran', [App\Http\Controllers\ProductsController::class, 'index'])->name('itiran');
+Route::get('/itiran', [App\Http\Controllers\ProductsController::class, 'getList'])->name('itiran');
+
 
 //新規登録
 Route::get('/NewItemAdd', [App\Http\Controllers\ProductsController::class, 'showNewItemForm'])->name('NewItemAdd');
 Route::post('/NewItemAdd', [App\Http\Controllers\ProductsController::class, 'showNewItemForm'])->name('NewItemAdd.store');
+
 
 //詳細画面
 Route::get('/products/syousai/{id}', [App\Http\Controllers\ProductsController::class, 'showsyousai'])->name('syousai');

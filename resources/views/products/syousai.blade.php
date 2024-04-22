@@ -31,7 +31,7 @@
     <td>{{ $product->product_name }}</td>
     <td>{{ $product->price }}円</td>
     <td>{{ $product->stock }}</td>
-    <td>{{ $product->company_name }}</td>
+    <td>{{ $product->company->company_name }}</td>
     <td>{{ $product->comment }}</td>
 </tr>
 

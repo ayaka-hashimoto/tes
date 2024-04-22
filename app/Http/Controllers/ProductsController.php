@@ -5,9 +5,12 @@ namespace App\Http\Controllers;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use App\Models\Products; 
+use App\Models\Companies; 
 use Exception; 
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Contracts\View\View;
+use Illuminate\Contracts\View\Factory;
 
 
 class productsController extends Controller
@@ -17,73 +20,76 @@ class productsController extends Controller
      *
      * @return \Illuminate\Http\Response
      */
-    public function getList(){
-        $model = new Products();
-        $products = $model->getProducts();
-    }
-
-    //絞り込み
-    public function index(Request $request){
-        $query = DB::table('products');
-
-        $query->when($request->filled('keyword'), function ($query) use ($request) {
-            $keyword = $request->keyword;
-            return $query->where('product_name', 'like', '%' . $keyword . '%')
-                         ->orWhere('price', 'like', '%' . $keyword . '%')
-                         ->orWhere('stock', 'like', '%' . $keyword . '%')
-                         ->orWhere('comment', 'like', '%' . $keyword . '%');
-        });
-
-        $query->when($request->filled('maker'), function ($query) use ($request) {
-            $maker = $request->maker;
-            return $query->where('company_name', 'like', '%' . $maker . '%');
-        });
-
-        $products = $query->get();
-        return view('products.itiran_viwe', ['products' => $products]);   
-    }
     
+     public function getList(Request $request): View
+     {
+         $query = Products::query();
+     
+         $products = $query->with('company')->get();
+         $companies = Companies::all();
+     
+         // キーワード検索
+         $query->when($request->filled('keyword'), function ($query) use ($request) {
+             $keyword = $request->keyword;
+             return $query->where('product_name', 'like', '%' . $keyword . '%')
+                 ->orWhere('price', 'like', '%' . $keyword . '%')
+                 ->orWhere('stock', 'like', '%' . $keyword . '%')
+                 ->orWhere('comment', 'like', '%' . $keyword . '%');
+         });
+     
+         // メーカー名絞り込み
+         $query->when($request->filled('company_id'), function ($query) use ($request) {
+             $query->where('company_id', $request->company_id);
+         });
+     
+         $products = $query->with('company')->get();
+     
+         return view('products.itiran', compact('products', 'companies'));
+     }
+  
     //新規登録
-    public function showNewItemForm(Request $request) {
+    public function showNewItemForm(Request $request)
+    {
+        $companies = Companies::all();
+        
         if ($request->isMethod('post')) {
             $request->validate([
                 'product_name' => 'required',
                 'price' => 'required|numeric',
                 'stock' => 'required|numeric',
-                'company_name' => 'required',
+                'company_id' => 'required|exists:companies,id',
                 'comment' => 'nullable',
                 'image' => 'nullable|image',
             ]);
     
-            $products = new Products();
-            $products->product_name = $request->input('product_name');
-            $products->price = $request->input('price');
-            $products->stock = $request->input('stock');
-            $products->company_name = $request->input('company_name');
-            $products->comment = $request->input('comment');
-    
-            $img_path = null;
+            $productData = [
+                'product_name' => $request->input('product_name'),
+                'price' => $request->input('price'),
+                'stock' => $request->input('stock'),
+                'company_id' => $request->input('company_id'),
+                'comment' => $request->input('comment'),
+            ];
+
             if ($request->hasFile('image')) {
                 $image = $request->file('image');
                 $file_name = $image->getClientOriginalName();
                 $image->storeAs('public/images', $file_name);
                 $img_path = 'storage/images/' . $file_name;
-                $products->img_path = $img_path;
+                $productData['img_path'] = $img_path;
             }
-    
+
             DB::beginTransaction();
             try {
-                $products->save();
+                $product = Products::create($productData);
                 DB::commit();
                 return redirect()->route('itiran')->with('success', '商品情報が登録されました。');
-            } catch (Exception $e) {
+            } catch (\Exception $e) {
                 DB::rollBack();
-                // Handle the exception, e.g., log it or return an error response
                 return redirect()->back()->withErrors(['error' => '商品情報の登録に失敗しました。']);
             }
         }
     
-        return view('products.NewItemAdd');
+        return view('products.NewItemAdd', compact('companies'));
     }
     
     //商品詳細
@@ -96,7 +102,8 @@ class productsController extends Controller
     public function showedit($id)
     {
         $product = Products::find($id);
-    return view('products.edit', compact('product'));
+        $companies = Companies::all(); 
+        return view('products.edit', compact('product', 'companies'));
     }
     
 
@@ -107,7 +114,7 @@ class productsController extends Controller
         'product_name' => 'required',
         'price' => 'required|numeric',
         'stock' => 'required|numeric',
-        'company_name' => 'required',
+        'company_id' => 'required',
         'comment' => 'nullable',
         'image' => 'nullable|image',
     ]);
@@ -116,26 +123,32 @@ class productsController extends Controller
     $product->product_name = $request->input('product_name');
     $product->price = $request->input('price');
     $product->stock = $request->input('stock');
-    $product->company_name = $request->input('company_name');
     $product->comment = $request->input('comment');
 
+    // 会社情報を取得
+    $company = Companies::findOrFail($request->input('company_id'));
+    $product->company_id = $company->id;
+
+    // 画像がアップロードされている場合の処理
     if ($request->hasFile('image')) {
-       
-        if ($product->img_path) {
-            Storage::delete('public/' . $product->img_path);
+        // 以前の画像を削除
+        if ($product->img_path && Storage::exists($product->img_path)) {
+            Storage::delete($product->img_path);
         }
 
-        //新しい画像登録と、前のデータ削除
+        // 新しい画像を保存
         $image = $request->file('image');
         $file_name = $image->getClientOriginalName();
         $img_path = $image->storeAs('images', $file_name, 'public');
         $product->img_path = 'storage/' . $img_path;
     }
 
+    // 画像がアップロードされていない場合の処理
     if (!$request->hasFile('image') && !$product->img_path) {
         $product->img_path = 'default/image/path.jpg';
     }
 
+    // 商品情報を保存
     $product->save();
 
     return redirect()->route('itiran')->with('success', '商品情報が更新されました。');
@@ -160,33 +173,28 @@ class productsController extends Controller
 }
 
 
-public function deleteProducts($id) {
-    DB::table('products')->where('id', $id)->delete();
-    $this->destroy();
+    public function deleteProducts($id) {
+        DB::table('products')->where('id', $id)->delete();
+        return redirect()->route('itiran')->with('success', '商品情報が削除されました。');
 }
 
-
-public function registSubmit(Request $request) {
-
-    // トランザクション開始
+    public function registSubmit(Request $request) {
     DB::beginTransaction();
 
     try {
-        // 登録処理呼び出し
-        $model = new Products ();
+        $model = new Products();
         $model->registproducts($request);
         DB::commit();
     } catch (\Exception $e) {
         DB::rollback();
-        return back();
+        return back()->withErrors(['error' => '登録に失敗しました。']);
     }
 
-    // 処理が完了したらregistにリダイレクト
-    return redirect(route('regist'));
+    return redirect(route('regist'))->with('success', '登録が完了しました。');
+}
+
 }
 
 
-
-}
 
   

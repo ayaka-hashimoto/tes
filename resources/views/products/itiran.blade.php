@@ -12,11 +12,14 @@
 <div class="container">
 <h1>商品一覧</h1>
 
-<form action="{{ route('itiran') }}" method="get">
-    <label for="keyword">キーワード検索:</label>
-    <input type="text" id="keyword" name="keyword" value="{{ request('keyword') }}">
-    <label for="maker">メーカー名で絞り込み:</label>
-    <input type="text" id="maker" name="maker" value="{{ request('maker') }}">
+<form action="{{ route('itiran') }}" method="GET">
+<input type="text" name="keyword" placeholder="キーワードを検索" value="{{ $keyword ?? '' }}">
+    <select class="form-select" id="company_id" name="company_id" placeholder="メーカー名を検索">
+        <option value="">--選択してください--</option>
+        @foreach($companies as $company)
+            <option value="{{ $company->id }}">{{ $company->company_name }}</option>
+        @endforeach
+    </select>
     <input type="submit" value="検索">
 </form>
 
@@ -42,7 +45,7 @@
         <td>{{ $product->product_name }}</td>
         <td>{{ $product->price }}円</td>
         <td>{{ $product->stock }}</td>
-        <td>{{ $product->company_name }}</td>
+        <td>{{ $product->company->company_name }}</td>
         <td>{{ $product->comment }}</td>
         <td>
             <form action="{{ route('syousai', $product->id) }}" method="GET">
