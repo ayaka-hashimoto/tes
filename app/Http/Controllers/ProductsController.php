@@ -22,30 +22,44 @@ class productsController extends Controller
      */
     
      public function getList(Request $request): View
-     {
-         $query = Products::query();
-     
-         $products = $query->with('company')->get();
-         $companies = Companies::all();
-     
-         // キーワード検索
-         $query->when($request->filled('keyword'), function ($query) use ($request) {
-             $keyword = $request->keyword;
-             return $query->where('product_name', 'like', '%' . $keyword . '%')
-                 ->orWhere('price', 'like', '%' . $keyword . '%')
-                 ->orWhere('stock', 'like', '%' . $keyword . '%')
-                 ->orWhere('comment', 'like', '%' . $keyword . '%');
-         });
-     
-         // メーカー名絞り込み
-         $query->when($request->filled('company_id'), function ($query) use ($request) {
-             $query->where('company_id', $request->company_id);
-         });
-     
-         $products = $query->with('company')->get();
-     
-         return view('products.itiran', compact('products', 'companies'));
-     }
+{
+    $query = Products::query()->with('company');
+
+    // キーワード検索
+    $query->when($request->filled('keyword'), function ($query) use ($request) {
+        $keyword = $request->keyword;
+        return $query->where('product_name', 'like', '%' . $keyword . '%')
+            ->orWhere('price', 'like', '%' . $keyword . '%')
+            ->orWhere('stock', 'like', '%' . $keyword . '%')
+            ->orWhere('comment', 'like', '%' . $keyword . '%');
+    });
+
+    // メーカー名絞り込み
+    $query->when($request->filled('company_id'), function ($query) use ($request) {
+        $query->where('company_id', $request->company_id);
+    });
+
+    // 価格の絞り込み
+    $query->when($request->filled('min_price') || $request->filled('max_price'), function ($query) use ($request) {
+        $query->whereBetween('price', [
+            $request->filled('min_price') ? $request->min_price : 0,
+            $request->filled('max_price') ? $request->max_price : PHP_INT_MAX,
+        ]);
+    });
+
+    // 在庫数の絞り込み
+    $query->when($request->filled('min_stock') || $request->filled('max_stock'), function ($query) use ($request) {
+        $query->whereBetween('stock', [
+            $request->filled('min_stock') ? $request->min_stock : 0,
+            $request->filled('max_stock') ? $request->max_stock : PHP_INT_MAX,
+        ]);
+    });
+
+    $products = $query->get();
+    $companies = Companies::all();
+
+    return view('products.itiran', compact('products', 'companies'));
+}
   
     //新規登録
     public function showNewItemForm(Request $request)
@@ -191,6 +205,48 @@ class productsController extends Controller
     }
 
     return redirect(route('regist'))->with('success', '登録が完了しました。');
+}
+
+//検索　上限下限追加
+public function search(Request $request)
+{
+    $keyword = $request->input('keyword');
+    $companyId = $request->input('company_id');
+    $minPrice = $request->input('min_price');
+    $maxPrice = $request->input('max_price');
+    $minStock = $request->input('min_stock');
+    $maxStock = $request->input('max_stock');
+
+    $products = Products::query();
+
+    if ($keyword) {
+        $products->where('product_name', 'like', '%' . $keyword . '%');
+    }
+
+    if ($companyId) {
+        $products->where('company_id', $companyId);
+    }
+
+    if ($minPrice) {
+        $products->where('price', '>=', $minPrice);
+    }
+
+    if ($maxPrice) {
+        $products->where('price', '<=', $maxPrice);
+    }
+
+    if ($minStock) {
+        $products->where('stock', '>=', $minStock);
+    }
+
+    if ($maxStock) {
+        $products->where('stock', '<=', $maxStock);
+    }
+
+    $products = $products->get();
+
+    // 必要に応じて、追加のデータをレスポンスに含める
+    return response()->json($products);
 }
 
 }
