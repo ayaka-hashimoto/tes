@@ -97,6 +97,7 @@
     </div>
 
 <script>
+    //商品検索
     function searchProducts() {
         const keyword = $('#keyword').val();
         const companyId = $('#company_id').val();
@@ -136,7 +137,8 @@
             }
         });
     }
-
+ 
+    //商品削除
     function deleteProduct(productId) {
         if (confirm("削除しますか？")) {
             $.ajax({
@@ -152,6 +154,37 @@
             });
         }
     }
+
+    $(document).ready(function() {
+        let sortOrder = 1; // 初期のソート順序（昇順）
+
+        $('th').click(function() {
+            const columnIndex = $(this).index();
+            const isNumeric = columnIndex === 0 || columnIndex === 3 || columnIndex === 4; // 数値列かどうか
+
+            $('th').removeClass('asc desc');
+            $(this).addClass(sortOrder === 1 ? 'asc' : 'desc');
+
+            const rows = $('tbody tr').get();
+            rows.sort(function(rowA, rowB) {
+                const cellA = $(rowA).children('td').eq(columnIndex).text().trim();
+                const cellB = $(rowB).children('td').eq(columnIndex).text().trim();
+
+                if (isNumeric) {
+                    return sortOrder * (parseInt(cellA) - parseInt(cellB));
+                } else {
+                    return sortOrder * cellA.localeCompare(cellB);
+                }
+            });
+
+            $.each(rows, function(index, row) {
+                $('tbody').append(row);
+            });
+
+            sortOrder *= -1; // 昇順と降順を切り替え
+        });
+    });
+
 </script>
 
 <hr>
