@@ -5,11 +5,10 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>在庫管理システム 商品一覧</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>    
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> 
 </head>
 
 <body>
-
 <div class="container">
     <h1>商品一覧</h1>
 
@@ -41,53 +40,55 @@
 </form>
     
     
-    <table id="dataTable" class="table">
+<table id="dataTable" class="table">
         <thead>
             <tr>
-            <th>ID</th>
-            <th>商品画像</th>
-            <th>商品名</th>
-            <th>価格</th>
-            <th>在庫数</th>
-            <th>メーカー名</th>
-            <th>コメント</th>
-            <th>商品情報詳細</th>
-            <th>商品削除</th>
+                <th>ID</th>
+                <th>商品画像</th>
+                <th>商品名</th>
+                <th>価格</th>
+                <th>在庫数</th>
+                <th>メーカー名</th>
+                <th>コメント</th>
+                <th>商品情報詳細</th>
+                <th>商品削除</th>
             </tr>
         </thead>
         <tbody>
-        @foreach ($products as $product)
-        <tr data-id="{{ $product->id }}">
-            <td>{{ $product->id }}</td>
-            <td><img src="{{ asset($product->img_path) }}" style='width: 50px; height: 50px;'></td>
-            <td>{{ $product->product_name }}</td>
-            <td>{{ $product->price }}円</td>
-            <td>{{ $product->stock }}</td>
-            <td>{{ $product->company->company_name }}</td>
-            <td>{{ $product->comment }}</td>
-            <td>
-                <form action="{{ route('syousai', $product->id) }}" method="GET">
-                    <button type="submit">詳細</button>
-                </form>
-            </td>
-            <td style="text-align:center">
-                <form action="{{ route('products.destroy', $product->id) }}" method="POST">
-                    @csrf
-                    @method('DELETE')
-                    <button type="submit" onclick='return confirm("削除しますか？")'>削除</button>
-                </form>
-            </td>
-        </tr>
-        @endforeach
+            @foreach ($products as $product)
+            <tr data-id="{{ $product->id }}">
+                <td>{{ $product->id }}</td>
+                <td><img src="{{ asset($product->img_path) }}" style='width: 50px; height: 50px;'></td>
+                <td>{{ $product->product_name }}</td>
+                <td>{{ $product->price }}円</td>
+                <td>{{ $product->stock }}</td>
+                <td>{{ $product->company->company_name }}</td>
+                <td>{{ $product->comment }}</td>
+                <td>
+                    <form action="{{ route('syousai', $product->id) }}" method="GET">
+                        <button type="submit">詳細</button>
+                    </form>
+                </td>
+                <td style="text-align:center">
+                    <form action="{{ route('products.destroy', $product->id) }}" method="POST">
+                        @csrf
+                        @method('DELETE')
+                        <button type="button" onclick="deleteProduct({{ $product->id }})">削除</button>
+                    </form>
+                </td>
+            </tr>
+            @endforeach
         </tbody>
     </table>
 
+    <!-- 成功メッセージ -->
     @if(session()->has('success'))
         <div class="alert alert-success">
             {{ session()->get('success') }}
         </div>
     @endif
 
+    <!-- モーダルウィンドウ -->
     <div id="detailModal" class="modal">
         <div class="modal-content">
             <span class="close">&times;</span>
@@ -95,36 +96,62 @@
         </div>
     </div>
 
-    <script>
-    $(document).ready(function() {
-        let sortOrder = 1; // 初期のソート順序（昇順）
+<script>
+    function searchProducts() {
+        const keyword = $('#keyword').val();
+        const companyId = $('#company_id').val();
+        const minPrice = $('#min_price').val();
+        const maxPrice = $('#max_price').val();
+        const minStock = $('#min_stock').val();
+        const maxStock = $('#max_stock').val();
 
-        $('th').click(function() {
-            const columnIndex = $(this).index();
-            const isNumeric = columnIndex === 0 || columnIndex === 3 || columnIndex === 4; // 数値列かどうか
+        $.ajax({
+            url: "{{ route('itiran') }}",
+            type: "GET",
+            data: {
+                keyword: keyword,
+                company_id: companyId,
+                min_price: minPrice,
+                max_price: maxPrice,
+                min_stock: minStock,
+                max_stock: maxStock
+            },
+            success: function(response) {
+                $('#dataTable tbody').empty();
+                $.each(response, function(index, product) {
+                    $('#dataTable tbody').append(
+                        `<tr data-id="${product.id}">
+                            <td>${product.id}</td>
+                            <td><img src="${product.img_path}" style='width: 50px; height: 50px;'></td>
+                            <td>${product.product_name}</td>
+                            <td>${product.price}円</td>
+                            <td>${product.stock}</td>
+                            <td>${product.company.company_name}</td>
+                            <td>${product.comment}</td>
+                            <td><button type="button" onclick="showDetails(${product.id})">詳細</button></td>
+                            <td><button type="button" onclick="deleteProduct(${product.id})">削除</button></td>
+                        </tr>`
+                    );
+                });
+            }
+        });
+    }
 
-            $('th').removeClass('asc desc');
-            $(this).addClass(sortOrder === 1 ? 'asc' : 'desc');
-
-            const rows = $('tbody tr').get();
-            rows.sort(function(rowA, rowB) {
-                const cellA = $(rowA).children('td').eq(columnIndex).text().trim();
-                const cellB = $(rowB).children('td').eq(columnIndex).text().trim();
-
-                if (isNumeric) {
-                    return sortOrder * (parseInt(cellA) - parseInt(cellB));
-                } else {
-                    return sortOrder * cellA.localeCompare(cellB);
+    function deleteProduct(productId) {
+        if (confirm("削除しますか？")) {
+            $.ajax({
+                url: "{{ route('products.destroy', ':id') }}".replace(':id', productId),
+                type: "POST",
+                data: {
+                    _method: "DELETE",
+                    _token: "{{ csrf_token() }}"
+                },
+                success: function(response) {
+                    $('#dataTable tbody tr[data-id="' + productId + '"]').remove();
                 }
             });
-
-            $.each(rows, function(index, row) {
-                $('tbody').append(row);
-            });
-
-            sortOrder *= -1; // 昇順と降順を切り替え
-        });
-    });
+        }
+    }
 </script>
 
 <hr>
