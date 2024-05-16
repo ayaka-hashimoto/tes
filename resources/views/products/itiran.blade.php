@@ -97,46 +97,53 @@
     </div>
 
 <script>
-    //商品検索
-    function searchProducts() {
-        const keyword = $('#keyword').val();
-        const companyId = $('#company_id').val();
-        const minPrice = $('#min_price').val();
-        const maxPrice = $('#max_price').val();
-        const minStock = $('#min_stock').val();
-        const maxStock = $('#max_stock').val();
-
-        $.ajax({
-            url: "{{ route('itiran') }}",
-            type: "GET",
-            data: {
-                keyword: keyword,
-                company_id: companyId,
-                min_price: minPrice,
-                max_price: maxPrice,
-                min_stock: minStock,
-                max_stock: maxStock
-            },
-            success: function(response) {
-                $('#dataTable tbody').empty();
-                $.each(response, function(index, product) {
-                    $('#dataTable tbody').append(
-                        `<tr data-id="${product.id}">
-                            <td>${product.id}</td>
-                            <td><img src="${product.img_path}" style='width: 50px; height: 50px;'></td>
-                            <td>${product.product_name}</td>
-                            <td>${product.price}円</td>
-                            <td>${product.stock}</td>
-                            <td>${product.company.company_name}</td>
-                            <td>${product.comment}</td>
-                            <td><button type="button" onclick="showDetails(${product.id})">詳細</button></td>
-                            <td><button type="button" onclick="deleteProduct(${product.id})">削除</button></td>
-                        </tr>`
-                    );
-                });
-            }
+    $(document).ready(function() {
+        $('form').submit(function(event) {
+            event.preventDefault();
+            // 商品検索を実行
+            searchProducts();
         });
-    }
+
+        // 商品検索
+        function searchProducts() {
+            const keyword = $('#keyword').val();
+            const companyId = $('#company_id').val();
+            const minPrice = $('#min_price').val();
+            const maxPrice = $('#max_price').val();
+            const minStock = $('#min_stock').val();
+            const maxStock = $('#max_stock').val();
+
+            $.ajax({
+                url: "{{ route('itiran') }}",
+                type: "GET",
+                data: {
+                    keyword: keyword,
+                    company_id: companyId,
+                    min_price: minPrice,
+                    max_price: maxPrice,
+                    min_stock: minStock,
+                    max_stock: maxStock
+                },
+                success: function(response) {
+                    $('#dataTable tbody').empty();
+                    $.each(response, function(index, product) {
+                        $('#dataTable tbody').append(
+                            `<tr data-id="${product.id}">
+                                <td>${product.id}</td>
+                                <td><img src="${product.img_path}" style='width: 50px; height: 50px;'></td>
+                                <td>${product.product_name}</td>
+                                <td>${product.price}円</td>
+                                <td>${product.stock}</td>
+                                <td>${product.company.company_name}</td>
+                                <td>${product.comment}</td>
+                                <td><button type="button" onclick="showDetails(${product.id})">詳細</button></td>
+                                <td><button type="button" onclick="deleteProduct(${product.id})">削除</button></td>
+                            </tr>`
+                        );
+                    });
+                }
+            });
+        }
  
     //商品削除
     function deleteProduct(productId) {

@@ -5,7 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Products;
-use App\Models\Sale; 
+use App\Models\Sales; 
 use Illuminate\Support\Facades\DB;
 
 class SalesController extends Controller
@@ -34,7 +34,7 @@ class SalesController extends Controller
             $product->save();
             
             // 購入記録を作成
-            Sale::create([ 
+            Sales::create([ 
                 'product_id' => $productId,
                 'amount' => 1, // 実際の購入数量に応じて修正
                 // その他の購入情報を必要に応じて追加
