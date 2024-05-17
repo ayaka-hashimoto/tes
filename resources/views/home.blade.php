@@ -21,3 +21,9 @@
     </div>
 </div>
 @endsection
+<link rel="stylesheet" href="{{ asset('css/style.css') }}">
+
+    <hr>
+    <a href="{{ route('NewItemAdd') }}" class="button">新規登録</a>
+    <a href="{{ route('itiran') }}" class="button">商品一覧</a>
+

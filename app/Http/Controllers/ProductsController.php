@@ -13,6 +13,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Contracts\View\Factory;
 
 
+
 class productsController extends Controller
 {
     /**
@@ -21,9 +22,9 @@ class productsController extends Controller
      * @return \Illuminate\Http\Response
      */
     
-     public function getList(Request $request): View
+     public function getList(Request $request)
 {
-    $query = Products::query()->with('company');
+    $query = Products::query()->with('company:id,company_name');
 
     // キーワード検索
     $query->when($request->filled('keyword'), function ($query) use ($request) {
@@ -58,9 +59,15 @@ class productsController extends Controller
     $products = $query->get();
     $companies = Companies::all();
 
+    if ($request->ajax()) {
+        // JSON レスポンスを返す
+        return response()->json(compact('products', 'companies'));
+    }
+
+    // 非同期通信でない場合は、ビューを返す
     return view('products.itiran', compact('products', 'companies'));
 }
-  
+
     //新規登録
     public function showNewItemForm(Request $request)
     {

@@ -5,14 +5,13 @@
     <meta name="csrf-token" content="{{ csrf_token() }}">
     <title>在庫管理システム 商品一覧</title>
     <link rel="stylesheet" href="{{ asset('css/style.css') }}">
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> 
 </head>
 
 <body>
 <div class="container">
     <h1>商品一覧</h1>
 
-    <form action="{{ route('itiran') }}" method="GET">
+    <form action="{{ route('itiran') }}" id="searchForm" method="GET">
     <div class="search-group">
         <input type="text" id="keyword" name="keyword" placeholder="キーワードを検索" value="{{ $keyword ?? '' }}">
     </div>
@@ -35,7 +34,7 @@
         <input type="number" id="max_stock" name="max_stock" placeholder="在庫数（上限）">
     </div>
     <div class="search-group">
-        <input type="submit" value="検索">
+         <input type="submit" id="search-btn" value="検索">
     </div>
 </form>
     
@@ -96,9 +95,10 @@
         </div>
     </div>
 
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script> 
 <script>
-    $(document).ready(function() {
-        $('form').submit(function(event) {
+   $(document).ready(function() {
+        $('#searchForm').submit(function(event) {
             event.preventDefault();
             // 商品検索を実行
             searchProducts();
@@ -106,45 +106,45 @@
 
         // 商品検索
         function searchProducts() {
-            const keyword = $('#keyword').val();
-            const companyId = $('#company_id').val();
-            const minPrice = $('#min_price').val();
-            const maxPrice = $('#max_price').val();
-            const minStock = $('#min_stock').val();
-            const maxStock = $('#max_stock').val();
-
-            $.ajax({
-                url: "{{ route('itiran') }}",
-                type: "GET",
-                data: {
-                    keyword: keyword,
-                    company_id: companyId,
-                    min_price: minPrice,
-                    max_price: maxPrice,
-                    min_stock: minStock,
-                    max_stock: maxStock
-                },
-                success: function(response) {
-                    $('#dataTable tbody').empty();
-                    $.each(response, function(index, product) {
-                        $('#dataTable tbody').append(
-                            `<tr data-id="${product.id}">
-                                <td>${product.id}</td>
-                                <td><img src="${product.img_path}" style='width: 50px; height: 50px;'></td>
-                                <td>${product.product_name}</td>
-                                <td>${product.price}円</td>
-                                <td>${product.stock}</td>
-                                <td>${product.company.company_name}</td>
-                                <td>${product.comment}</td>
-                                <td><button type="button" onclick="showDetails(${product.id})">詳細</button></td>
-                                <td><button type="button" onclick="deleteProduct(${product.id})">削除</button></td>
-                            </tr>`
-                        );
-                    });
-                }
+    $.ajax({
+        url: "{{ route('itiran') }}",
+        type: "GET",
+        data: $('#searchForm').serialize(),
+        success: function(response) {
+            $('#dataTable tbody').empty();
+            $.each(response.products, function(index, product) {
+                $('#dataTable tbody').append(
+                    `<tr data-id="${product.id}">
+                        <td>${product.id}</td>
+                        <td><img src="${product.img_path}" style='width: 50px; height: 50px;'></td>
+                        <td>${product.product_name}</td>
+                        <td>${product.price}円</td>
+                        <td>${product.stock}</td>
+                        <td>${product.company ? product.company.company_name : '未指定'}</td> 
+                        <td>${product.comment}</td>
+                        <td><button type="button" onclick="showDetails({{ $product->id }})">詳細</button></td>
+                        <td><button type="button" onclick="deleteProduct(${product.id})">削除</button></td>
+                    </tr>`
+                );
             });
         }
- 
+    });
+}
+
+// 商品詳細表示
+function showDetails(productId) {
+        const productDetailUrl = "{{ route('syousai', ':id') }}".replace(':id', productId);
+        $.ajax({
+            url: productDetailUrl,
+            type: "GET",
+            success: function(response) {
+                $('#detailContent').text(response);
+                $('#detailModal').css('display', 'block');
+        }
+    });
+}
+    });
+    
     //商品削除
     function deleteProduct(productId) {
         if (confirm("削除しますか？")) {
